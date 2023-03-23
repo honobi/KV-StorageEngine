@@ -7,6 +7,7 @@
 #include <iostream>
 #include <mutex>
 #include <string.h>
+#include <fstream>
 
 template<typename K, typename V>
 class SkipListNode {
@@ -37,6 +38,8 @@ class SkipList {
     void erase(K);
     void print();
     int size();
+    void read_file(const char* file_name = "data");
+    void write_file(const char* file_name = "data"); 
 
     std::mutex mutex_;
  private:
@@ -214,6 +217,32 @@ void SkipList<K, V>::print() {
 template<typename K, typename V> 
 int SkipList<K, V>::size() { 
     return size_;
+}
+
+template<typename K, typename V>
+void SkipList<K, V>::read_file(const char* file_name) {
+    std::ifstream in(file_name);
+    if(in.is_open()) {
+        K key;
+        V val;
+        while(in >> key >> val){
+            insert(key, val);
+        }
+    }
+    in.close();
+}
+
+template<typename K, typename V>
+void SkipList<K, V>::write_file(const char* file_name) {
+    std::ofstream out(file_name);
+    if(out.is_open()) {
+        SkipListNode<K, V>* cur = header_;
+        while(cur){
+            out << cur->key() << cur->val();
+            cur = cur->next_[0];
+        }
+    }
+   out.close();
 }
 
 #endif
