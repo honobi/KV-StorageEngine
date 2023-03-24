@@ -33,9 +33,9 @@ class SkipList {
     SkipList(int max_level);  // 跳表的最大高度一般设置为log2(n)
     ~SkipList();
     int get_random_level();
-    int insert(K, V);
+    SkipListNode<K, V>* insert(K, V);
     SkipListNode<K, V>* search(K);
-    void erase(K);
+    bool erase(K);
     void print();
     int size();
     void read_file(const char* file_name = "data");
@@ -104,9 +104,9 @@ SkipList<K, V>::~SkipList() {
    }
 }
 
-// 成功返回0，失败返回-1（key已存在）
+// 成功返回插入节点的指针，失败也返回已存在的节点的指针。这一点是为了方便插入LRUCache
 template<typename K, typename V>
-int SkipList<K, V>::insert(K key, V val) {
+SkipListNode<K, V>* SkipList<K, V>::insert(K key, V val) {
     mutex_.lock();
     SkipListNode<K, V>* cur = header_;
     SkipListNode<K, V>* last_less[max_level_ + 1];  // 保存每一级中最后一个小于key的节点。这个数组是论文中的update数组
@@ -123,7 +123,7 @@ int SkipList<K, V>::insert(K key, V val) {
     // 如果key已存在
     if(cur && cur->key() == key) {
         mutex_.unlock();
-        return -1;
+        return cur;
     }
     // 如果插入位置为链表尾，或者第一个不小于key的元素与key不相等，那么key可以插入
     if(cur == NULL || cur->key() != key){
@@ -142,13 +142,16 @@ int SkipList<K, V>::insert(K key, V val) {
             last_less[i]->next_[i] = new_node;
         }
         ++size_;
+        mutex_.unlock();
+        return new_node;
     }
     mutex_.unlock();
-    return 0;
+    return NULL;
 }
 
+// 当节点不存在时返回false
 template<typename K, typename V>
-void SkipList<K, V>::erase(K key) {
+bool SkipList<K, V>::erase(K key) {
     mutex_.lock();
     SkipListNode<K, V>* cur = header_;
     SkipListNode<K, V>* last_less[max_level_ + 1];
@@ -173,9 +176,10 @@ void SkipList<K, V>::erase(K key) {
         }
         --size_;
         delete cur;
+        return true;
     }
     mutex_.unlock();
-    return;
+    return false;
 }
 
 template<typename K, typename V> 
