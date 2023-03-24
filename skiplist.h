@@ -6,7 +6,7 @@
 
 #include <iostream>
 #include <mutex>
-#include <string.h>
+#include <cstring>
 #include <fstream>
 
 template<typename K, typename V>
@@ -30,7 +30,7 @@ class SkipListNode {
 template<typename K, typename V>
 class SkipList {
  public:
-    SkipList(int max_level);
+    SkipList(int max_level);  // 跳表的最大高度一般设置为log2(n)
     ~SkipList();
     int get_random_level();
     int insert(K, V);
